@@ -138,5 +138,29 @@ int main(void)
     
     cout << "Number of ways present in the map are: " << count_ways << "\n";
 
+    int choice;
+    while (true)
+    {
+        cout << "Enter 1 to search the id's enter by a user.\n";
+        cout << "Enter 2 to find the k-closest nodes of a particular node.\n";
+        cout << "Enter 3 to see the the length of the shortest path between 2 particular nodes.\n";
+        cout << "Enter 0 to exit the loop.\n";
+        cin >> choice;
+        if (choice == 0)
+        {
+            break;
+        }
+        
+        switch (choice)
+        {
+        case 1:
+            break;
+        
+        default:
+            cout << "Invalid Input!!\n";
+            break;
+        }
+    }
+
     return 0;
 }
