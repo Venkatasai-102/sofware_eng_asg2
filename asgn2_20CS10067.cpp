@@ -52,7 +52,7 @@ bool is_substring(string name, string or_name)
 
 bool comp_pair(pair<ll, long double> t1, pair<ll, long double> t2)
 {
-    return (t1.second > t2.second);
+    return (t1.second < t2.second);
 }
 
 class node
@@ -60,13 +60,14 @@ class node
     public:
     ll id, uid;
     long double lat, lon;
-    string usr_nm;
+    string usr_nm, plc_nm;
 
     node()
     {
         this->id = 0;
         this->lat = this->lon = 0.0;
         this->usr_nm = "name";
+        this->plc_nm = "name";
     }
     node(ll id, ll uid, double lt, double ln, string nm)
     {
@@ -75,6 +76,7 @@ class node
         this->lat = lt;
         this->lon = ln;
         this->usr_nm = nm;
+        this->plc_nm = "name";
     }
 
     long double distance_from_othernode(node other)
@@ -167,18 +169,27 @@ int main(void)
 
     for (xml_node<> *parse_node = root_node->first_node("node"); parse_node != way_strt; parse_node = parse_node->next_sibling())
     {
-        // cout << parse_node->first_attribute("id")->value();
-        // cout << endl;
-
         count_node ++; // counting the number of nodes
 
         node temp_nd;
         temp_nd = node(stoll(parse_node->first_attribute("id")->value()), stoll(parse_node->first_attribute("uid")->value()), stod(parse_node->first_attribute("lat")->value()), stod(parse_node->first_attribute("lon")->value()), ctos(parse_node->first_attribute("user")->value()));
+
+        bool is_nm = false;
+        string pl_name;
+
+        for (xml_node<> *parse_tag = parse_node->first_node("tag"); parse_tag; parse_tag = parse_tag->next_sibling())
+        {
+            if (parse_tag->first_attribute("k")->value() == "name")
+            {
+                pl_name = parse_tag->first_attribute("v")->value();
+            }
+        }
+
+        temp_nd.plc_nm = pl_name;
         list_nodes.insert(pair<ll, node>(temp_nd.id, temp_nd));
     }
 
     cout << "Number of nodes present in the map are: " << count_node << "\n";
-    // cout << "Number of tags = " << count_tags << "\n";
 
     // Iterate over the way
     for (xml_node<> *parse_way = way_strt; parse_way != way_end; parse_way = parse_way->next_sibling())
