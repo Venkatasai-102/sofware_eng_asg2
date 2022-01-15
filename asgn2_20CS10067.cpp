@@ -12,8 +12,7 @@ typedef long long ll;
 xml_document<> doc;
 xml_node<> *root_node = NULL;
 
-// Utility function for
-// converting degrees to radians
+// Function for converting degrees to radians
 inline long double toRadians(const long double degree){return (((long double)((M_PI) / 180)) * degree);}
 
 string ctos(char *str)
@@ -28,8 +27,30 @@ string ctos(char *str)
     return ans;
 }
 
-bool is_substring(string name, string or_name)
+string to_small(string str)
 {
+    int n = str.size();
+
+    string ans = "";
+
+    for (int i = 0; i < n; i++)
+    {
+        if ('A' <= str[i] && 'Z' >= str[i])
+        {
+            ans += str[i] - 'A' + 'a';
+        }
+        else
+        {
+            ans += str[i];
+        }
+    }
+    return ans;
+}
+
+bool is_substring(string name1, string name2)
+{
+    string name = to_small(name1);
+    string or_name = to_small(name2);
     int len_ss = name.size();
     int len_nm = or_name.size();
 
@@ -161,7 +182,8 @@ int main(void)
     // int count_tags = 0;
 
     map<ll, node> list_nodes;
-    vector<way> lsit_ways;
+    vector<node> list_nd_with_name;
+    vector<way> list_ways;
 
     // Iterate over the nodes
     xml_node<> *way_strt = root_node->first_node("way"); // to start way and stop node
@@ -179,13 +201,21 @@ int main(void)
 
         for (xml_node<> *parse_tag = parse_node->first_node("tag"); parse_tag; parse_tag = parse_tag->next_sibling())
         {
-            if (parse_tag->first_attribute("k")->value() == "name")
+            if (ctos(parse_tag->first_attribute("k")->value()) == "name")
             {
-                pl_name = parse_tag->first_attribute("v")->value();
+                pl_name = ctos(parse_tag->first_attribute("v")->value());
+                is_nm = true;
+                break;
             }
         }
-
+        
         temp_nd.plc_nm = pl_name;
+
+        if (is_nm)
+        {
+            list_nd_with_name.push_back(temp_nd);
+        }
+        
         list_nodes.insert(pair<ll, node>(temp_nd.id, temp_nd));
     }
 
@@ -197,17 +227,24 @@ int main(void)
         count_ways ++;
         way temp_way;
         temp_way = way(stoll(parse_way->first_attribute("id")->value()), stoll(parse_way->first_attribute("uid")->value()), ctos(parse_way->first_attribute("user")->value()));
-        lsit_ways.push_back(temp_way);
+        for (xml_node<> *parse_nd = parse_way->first_node("nd"); parse_nd != parse_way->first_node("tag"); parse_nd = parse_nd->next_sibling())
+        {
+            temp_way.nodes_in_way.push_back(list_nodes.at(stoll(parse_nd->first_attribute("ref")->value())));
+        }
+        list_ways.push_back(temp_way);
+        // cout << "The number of nodes in this way is: " << temp_way.nodes_in_way.size() << "\n";
     }
     
     cout << "Number of ways present in the map are: " << count_ways << "\n";
 
     node temp_node;
 
+    // cout << "The number of nodes with names are: " << list_nd_with_name.size() << "\n";
+
     int choice;
     while (true)
     {
-        cout << "Enter 1 to search the id's enter by a user.\n";
+        cout << "\nEnter 1 to search the id of a place by its name.\n";
         cout << "Enter 2 to find the k-closest nodes of a particular node.\n";
         cout << "Enter 3 to see the the length of the shortest path between 2 particular nodes.\n";
         cout << "Enter 0 to exit the loop.\n";
@@ -220,6 +257,20 @@ int main(void)
         switch (choice)
         {
         case 1:
+        {
+            string plc_name;
+            cout << "\nEnter full name or substring of name of place to find the id of that place: ";
+            cin >> plc_name;
+            
+            for (auto itr : list_nd_with_name)
+            {
+                if (is_substring(plc_name, itr.plc_nm))
+                {
+                    cout << "The id of the place with the name " << itr.plc_nm << " is: " << itr.id << "\nlatitude: " << itr.lat << "\nlongitude: " << itr.lon << "\n";
+                    break;
+                }
+            }
+        }
             break;
         case 2:
         {
@@ -231,16 +282,24 @@ int main(void)
             cin >> k;
             int ind_id = 0;
             node temp_nd;
+            bool is_prsnt = false;
             for(auto itr : list_nodes)
             {
                 if (itr.first == id)
                 {
                     temp_nd = itr.second;
+                    is_prsnt = true;
                     break;
                 }
                 ind_id ++;
             }
 
+            if (!is_prsnt)
+            {
+                cout << "\nThe node with entered id is not present in the map.\n\n";
+                continue;
+            }
+            
             vector<pair<ll, long double>> dist_arr = temp_nd.distance_from_allnodes(list_nodes);
             cout << "The first " << k << " closest nodes with id " << id << " are:\n";
             for (int i = 0; i < k; i++)
@@ -254,6 +313,8 @@ int main(void)
             break;
         }
     }
+    
+    cout << "\n*** You have done ***\n\n";
 
     return 0;
 }
