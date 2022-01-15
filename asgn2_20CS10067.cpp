@@ -1,6 +1,11 @@
 // NAME: VENKATA SAI SUVVARI
 // ROLL: 20CS10067
 
+/*
+    1. The user searches for the name of a places instead of user-name in the first case.
+    2. Every map will start with root tag "osm" and their attributes will be same as given sample map.
+*/
+
 #include <bits/stdc++.h>
 #include "rapidxml.hpp"
 
@@ -9,12 +14,14 @@ using namespace rapidxml;
 
 typedef long long ll;
 
+// for parsing the osm/xml file
 xml_document<> doc;
 xml_node<> *root_node = NULL;
 
 // Function for converting degrees to radians
 inline long double toRadians(const long double degree){return (((long double)((M_PI) / 180)) * degree);}
 
+// to convert "char *" to string
 string ctos(char *str)
 {
     string ans = "";
@@ -27,6 +34,7 @@ string ctos(char *str)
     return ans;
 }
 
+// returns a string with all letters in lowercase
 string to_small(string str)
 {
     int n = str.size();
@@ -47,6 +55,7 @@ string to_small(string str)
     return ans;
 }
 
+// checks whether name1 is substring of name2
 bool is_substring(string name1, string name2)
 {
     string name = to_small(name1);
@@ -71,6 +80,7 @@ bool is_substring(string name1, string name2)
     }
 }
 
+// for comparing 2 pair elements t1 and t2, which is later used in the sort function as function pointer
 bool comp_pair(pair<ll, long double> t1, pair<ll, long double> t2)
 {
     return (t1.second < t2.second);
@@ -100,6 +110,7 @@ class node
         this->plc_nm = "name";
     }
 
+    // finds distance from one node to other using the geo-coordinates
     long double distance_from_othernode(node other)
     {
         long double lat1 = toRadians(this->lat);
@@ -122,6 +133,7 @@ class node
         return ans;
     }
 
+    // returns an array of distances from given node to all other nodes
     vector<pair<ll, long double>> distance_from_allnodes(map<ll, node> list)
     {
         vector<pair<ll, long double>> one_node_dist;
@@ -179,8 +191,8 @@ int main(void)
     root_node = doc.first_node("osm");
 
     int count_node = 0,  count_ways = 0;
-    // int count_tags = 0;
 
+    // lists to store the nodes, nodes with name tags and list of ways in the map.osm file
     map<ll, node> list_nodes;
     vector<node> list_nd_with_name;
     vector<way> list_ways;
@@ -194,6 +206,7 @@ int main(void)
         count_node ++; // counting the number of nodes
 
         node temp_nd;
+        // initiating with given attributes
         temp_nd = node(stoll(parse_node->first_attribute("id")->value()), stoll(parse_node->first_attribute("uid")->value()), stod(parse_node->first_attribute("lat")->value()), stod(parse_node->first_attribute("lon")->value()), ctos(parse_node->first_attribute("user")->value()));
 
         bool is_nm = false;
@@ -213,20 +226,21 @@ int main(void)
 
         if (is_nm)
         {
-            list_nd_with_name.push_back(temp_nd);
+            list_nd_with_name.push_back(temp_nd); // if the node contains the name tags then adding it to the list2 also
         }
         
         list_nodes.insert(pair<ll, node>(temp_nd.id, temp_nd));
     }
 
     cout << "Number of nodes present in the map are: " << count_node << "\n";
-
     // Iterate over the way
     for (xml_node<> *parse_way = way_strt; parse_way != way_end; parse_way = parse_way->next_sibling())
     {
         count_ways ++;
         way temp_way;
         temp_way = way(stoll(parse_way->first_attribute("id")->value()), stoll(parse_way->first_attribute("uid")->value()), ctos(parse_way->first_attribute("user")->value()));
+        
+        // storing the nodes in the way in the respective object
         for (xml_node<> *parse_nd = parse_way->first_node("nd"); parse_nd != parse_way->first_node("tag"); parse_nd = parse_nd->next_sibling())
         {
             temp_way.nodes_in_way.push_back(list_nodes.at(stoll(parse_nd->first_attribute("ref")->value())));
@@ -262,13 +276,20 @@ int main(void)
             cout << "\nEnter full name or substring of name of place to find the id of that place: ";
             cin >> plc_name;
             
-            for (auto itr : list_nd_with_name)
+            bool is_present = false;
+            for (auto itr : list_nd_with_name) // checking the list with nodes if the name matches with any
             {
                 if (is_substring(plc_name, itr.plc_nm))
                 {
                     cout << "The id of the place with the name " << itr.plc_nm << " is: " << itr.id << "\nlatitude: " << itr.lat << "\nlongitude: " << itr.lon << "\n";
+                    is_present = true;
                     break;
                 }
+            }
+            
+            if (!is_present)
+            {
+                cout << "There is no node with the entered name as substring!!\n";
             }
         }
             break;
