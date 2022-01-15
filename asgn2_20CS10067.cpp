@@ -14,47 +14,7 @@ xml_node<> *root_node = NULL;
 
 // Utility function for
 // converting degrees to radians
-long double toRadians(const long double degree)
-{
-    // cmath library in C++
-    // defines the constant
-    // M_PI as the value of
-    // pi accurate to 1e-30
-    long double one_deg = (M_PI) / 180;
-    return (one_deg * degree);
-}
- 
-long double distance(long double lat1, long double long1,
-                     long double lat2, long double long2)
-{
-    // Convert the latitudes
-    // and longitudes
-    // from degree to radians.
-    lat1 = toRadians(lat1);
-    long1 = toRadians(long1);
-    lat2 = toRadians(lat2);
-    long2 = toRadians(long2);
-     
-    // Haversine Formula
-    long double dlong = long2 - long1;
-    long double dlat = lat2 - lat1;
- 
-    long double ans = pow(sin(dlat / 2), 2) +
-                          cos(lat1) * cos(lat2) *
-                          pow(sin(dlong / 2), 2);
- 
-    ans = 2 * asin(sqrt(ans));
- 
-    // Radius of Earth in
-    // Kilometers, R = 6371
-    // Use R = 3956 for miles
-    long double R = 6371;
-     
-    // Calculate the result
-    ans = ans * R;
- 
-    return ans;
-}
+inline long double toRadians(const long double degree){return (((long double)((M_PI) / 180)) * degree);}
 
 string ctos(char *str)
 {
@@ -90,11 +50,16 @@ bool is_substring(string name, string or_name)
     }
 }
 
+bool comp_pair(pair<ll, long double> t1, pair<ll, long double> t2)
+{
+    return (t1.second > t2.second);
+}
+
 class node
 {
     public:
     ll id, uid;
-    double lat, lon;
+    long double lat, lon;
     string usr_nm;
 
     node()
@@ -111,6 +76,49 @@ class node
         this->lon = ln;
         this->usr_nm = nm;
     }
+
+    long double distance_from_othernode(node other)
+    {
+        long double lat1 = toRadians(this->lat);
+        long double long1 = toRadians(this->lon);
+        long double lat2 = toRadians(other.lat);
+        long double long2 = toRadians(other.lon);
+        
+        // Haversine Formula
+        long double diff_lon = long2 - long1;
+        long double diff_lat = lat2 - lat1;
+        long double ans = pow(sin(diff_lat / 2), 2) + cos(lat1)*cos(lat2)*pow(sin(diff_lon / 2), 2);
+
+        ans = 2*asin(sqrt(ans));
+
+        // Radius of Earth in Kilometers is R = 6371Km
+        long double R = 6371;
+
+        ans = ans * R;
+
+        return ans;
+    }
+
+    vector<pair<ll, long double>> distance_from_allnodes(map<ll, node> list)
+    {
+        vector<pair<ll, long double>> one_node_dist;
+        int n = list.size();
+        for(auto itr : list)
+        {
+            if (this->id == itr.first)
+            {
+                continue;
+            }
+
+            pair<ll, long double> temp;
+            temp.first = itr.first;
+            temp.second = this->distance_from_othernode(itr.second);
+            one_node_dist.push_back(temp);
+        }
+
+        sort(one_node_dist.begin(), one_node_dist.end(), comp_pair);
+        return one_node_dist;
+    }
 };
 
 class way
@@ -118,6 +126,7 @@ class way
     public:
     ll id, uid;
     string usr_nm;
+    vector<node> nodes_in_way;
 
     way()
     {
@@ -149,7 +158,7 @@ int main(void)
     int count_node = 0,  count_ways = 0;
     // int count_tags = 0;
 
-    vector<node> list_nodes;
+    map<ll, node> list_nodes;
     vector<way> lsit_ways;
 
     // Iterate over the nodes
@@ -165,7 +174,7 @@ int main(void)
 
         node temp_nd;
         temp_nd = node(stoll(parse_node->first_attribute("id")->value()), stoll(parse_node->first_attribute("uid")->value()), stod(parse_node->first_attribute("lat")->value()), stod(parse_node->first_attribute("lon")->value()), ctos(parse_node->first_attribute("user")->value()));
-        list_nodes.push_back(temp_nd);
+        list_nodes.insert(pair<ll, node>(temp_nd.id, temp_nd));
     }
 
     cout << "Number of nodes present in the map are: " << count_node << "\n";
@@ -181,6 +190,8 @@ int main(void)
     }
     
     cout << "Number of ways present in the map are: " << count_ways << "\n";
+
+    node temp_node;
 
     int choice;
     while (true)
@@ -199,7 +210,34 @@ int main(void)
         {
         case 1:
             break;
-        
+        case 2:
+        {
+            ll id;
+            int k;
+            cout << "Enter the id of node from which you want to find distance of k-closest nodes: ";
+            cin >> id;
+            cout << "Enter the value of k: ";
+            cin >> k;
+            int ind_id = 0;
+            node temp_nd;
+            for(auto itr : list_nodes)
+            {
+                if (itr.first == id)
+                {
+                    temp_nd = itr.second;
+                    break;
+                }
+                ind_id ++;
+            }
+
+            vector<pair<ll, long double>> dist_arr = temp_nd.distance_from_allnodes(list_nodes);
+            cout << "The first " << k << " closest nodes with id " << id << " are:\n";
+            for (int i = 0; i < k; i++)
+            {
+                cout << dist_arr[i].first << " " << dist_arr[i].second << "\n";
+            }
+        }
+            break;
         default:
             cout << "Invalid Input!!\n";
             break;
