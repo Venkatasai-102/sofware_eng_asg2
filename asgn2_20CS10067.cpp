@@ -177,7 +177,79 @@ class way
     }
 };
 
-int main(void)
+class edge
+{
+    public:
+    ll id1, id2;
+    long double cost;
+    edge(ll id1, ll id2, long double cst)
+    {
+        this->id1 = id1;
+        this->id2 = id2;
+        this->cost = cst;
+    }
+};
+
+class graph
+{
+    public:
+    vector<edge> list_edge;
+
+    // Forms graph from the list of ways
+    graph form_graph(vector<way> &list_way)
+    {
+        graph g;
+        node temp_nd1, temp_nd2;
+        for (auto itr : list_way)
+        {
+            int len = itr.nodes_in_way.size();
+            int prev = 0;
+            for (int i = 1; i < len; i++)
+            {
+                temp_nd1 = itr.nodes_in_way[prev];
+                temp_nd2 = itr.nodes_in_way[i];
+                edge e1 = edge(temp_nd1.id, temp_nd2.id, temp_nd1.distance_from_othernode(temp_nd2));
+                edge e2 = edge(temp_nd2.id, temp_nd1.id, temp_nd1.distance_from_othernode(temp_nd2));
+                prev++;
+
+                // since this is an undirected graph, push the edges which are opposite to each other in terms of ends
+                g.list_edge.push_back(e1);
+                g.list_edge.push_back(e2);
+            }
+        }
+        return g;
+    }
+
+    // This prints the neighbouring nodes of each node in the graph (*** Beware this is too large ***)
+    void print_graph()
+    {
+        int len = this->list_edge.size();
+        vector<bool> visited(len, false);
+        for (int i = 0; i < len; i++)
+        {
+            if (visited[i] == true)
+            {
+                continue;
+            }
+            
+            visited[i] = true;
+            ll id = this->list_edge[i].id1;
+            cout << id << " -> " << this->list_edge[i].id2 << ", ";
+
+            for (int j = i+1; j < len; j++)
+            {
+                if (this->list_edge[j].id1 == id)
+                {
+                    cout << this->list_edge[j].id2 << ", ";
+                    visited[j] = true;
+                }
+            }
+            cout << "\n";
+        }
+    }
+};
+
+int main()
 {
     // Read the map.osm file
     ifstream input("map.osm");
@@ -246,14 +318,14 @@ int main(void)
             temp_way.nodes_in_way.push_back(list_nodes.at(stoll(parse_nd->first_attribute("ref")->value())));
         }
         list_ways.push_back(temp_way);
-        // cout << "The number of nodes in this way is: " << temp_way.nodes_in_way.size() << "\n";
     }
     
     cout << "Number of ways present in the map are: " << count_ways << "\n";
 
     node temp_node;
 
-    // cout << "The number of nodes with names are: " << list_nd_with_name.size() << "\n";
+    graph g = g.form_graph(list_ways);
+    // g.print_graph();
 
     int choice;
     while (true)
@@ -368,6 +440,11 @@ int main(void)
             
             node src = list_nodes.at(id1);
             node dstn = list_nodes.at(id2);
+        }
+            break;
+        case 4:
+        {
+            g.print_graph();
         }
             break;
         default:
