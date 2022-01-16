@@ -301,7 +301,7 @@ int main(void)
             cin >> id;
             cout << "Enter the value of k: ";
             cin >> k;
-            int ind_id = 0;
+            
             node temp_nd;
             bool is_prsnt = false;
             for(auto itr : list_nodes)
@@ -312,7 +312,6 @@ int main(void)
                     is_prsnt = true;
                     break;
                 }
-                ind_id ++;
             }
 
             if (!is_prsnt)
@@ -327,6 +326,48 @@ int main(void)
             {
                 cout << dist_arr[i].first << " " << dist_arr[i].second << "\n";
             }
+        }
+            break;
+        case 3:
+        {
+            cout << "\nDo you know the id of the start and destination?\nEnter 0 if you don't know and then enter 2 and type the name to find id's, and 1 if you know\n";
+            int ch;
+            cin >> ch;
+            if (!ch)
+            {
+                continue;
+            }
+            
+            cout << "\nEnter the id of the start and destination: ";
+            ll id1, id2;
+            cin >> id1 >> id2;
+            bool is_id1_p = false, is_id2_p = false;
+
+            for (auto itr : list_nodes)
+            {
+                if (itr.first == id1)
+                {
+                    is_id1_p = true;
+                    continue;
+                }
+                if (itr.first == id2)
+                {
+                    is_id2_p = true;
+                }
+                if (is_id2_p && is_id1_p)
+                {
+                    break;
+                }
+            }
+            
+            if (!(is_id2_p && is_id1_p))
+            {
+                cout << "\nOne of the id's you have entered is not correct!!\nCheck and enter again\n";
+                continue;
+            }
+            
+            node src = list_nodes.at(id1);
+            node dstn = list_nodes.at(id2);
         }
             break;
         default:
