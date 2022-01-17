@@ -7,7 +7,7 @@
 */
 
 #include <bits/stdc++.h>
-#include "rapidxml.hpp"
+#include "rapidxml.hpp" // the header for traversing the xml file
 
 using namespace std;
 using namespace rapidxml;
@@ -15,8 +15,8 @@ using namespace rapidxml;
 typedef long long ll;
 
 // for parsing the osm/xml file
-xml_document<> doc;
-xml_node<> *root_node = NULL;
+xml_document<> doc; // to point to the document
+xml_node<> *root_node = NULL; // to point to the start of the xml root node
 
 // Function for converting degrees to radians
 inline long double toRadians(const long double degree){return (((long double)((M_PI) / 180)) * degree);}
@@ -58,18 +58,20 @@ string to_small(string str)
 // checks whether name1 is substring of name2
 bool is_substring(string name1, string name2)
 {
+    // converting both the string to the lower case to check for the case-insensitive
     string name = to_small(name1);
     string or_name = to_small(name2);
+
     int len_ss = name.size();
     int len_nm = or_name.size();
-
+    
     if (len_nm < len_ss)
     {
         return false;
     }
     else
     {
-        for (int i = 0; i < len_nm - len_ss; i++)
+        for (int i = 0; i <= len_nm - len_ss; i++)
         {
             if (or_name.substr(i, len_ss) == name)
             {
@@ -119,18 +121,13 @@ class node
         long double long2 = toRadians(other.lon);
         
         // Haversine Formula
-        long double diff_lon = long2 - long1;
-        long double diff_lat = lat2 - lat1;
+        long double diff_lon = long2 - long1, diff_lat = lat2 - lat1;
         long double ans = pow(sin(diff_lat / 2), 2) + cos(lat1)*cos(lat2)*pow(sin(diff_lon / 2), 2);
-
         ans = 2*asin(sqrt(ans));
 
-        // Radius of Earth in Kilometers is R = 6371Km
-        long double R = 6371;
+        long double R = 6371.0; // the radius of earth
 
-        ans = ans * R;
-
-        return ans;
+        return (ans * R);
     }
 
     // returns an array of distances from given node to all other nodes
@@ -247,13 +244,59 @@ class graph
             cout << "\n";
         }
     }
+
+    // gives the shortest path for 2 given nodes using dijkstra algorithm variation called "Uniform-cost search"
+    long double traverse_graph(graph g, map<ll, node> &list_nodes, ll src_id, ll dst_id)
+    {
+        map<ll, bool> visited;
+        for (auto itr : list_nodes)
+        {
+            visited.insert(pair<ll, bool> (itr.first, false));
+        }
+        
+        priority_queue<pair<long double, ll>> pr_que;
+        pr_que.push(make_pair(0.0, src_id));
+
+        long double dist = (INT_MAX)*1.0;
+        while (pr_que.size() > 0)
+        {
+            pair<long double, ll> temp = pr_que.top();
+            temp.first *= -1;
+            pr_que.pop();
+            if (dst_id == temp.second)
+            {
+                if (dist > temp.first)
+                {
+                    dist = temp.first;
+                }
+                visited.clear();
+                return dist;
+            }
+            
+            if (!visited[temp.second])
+            {
+                for (auto itr : g.list_edge)
+                {
+                    if (itr.id1 == temp.second)
+                    {
+                        long double nw_cost = temp.first + itr.cost;
+                        pr_que.push(make_pair(nw_cost*(-1), itr.id2));
+                    }
+                }
+            }
+            visited[temp.second] = true;
+        }
+        
+        visited.clear();
+        return dist;
+    }
 };
 
 int main()
 {
     // Read the map.osm file
     ifstream input("map.osm");
-    vector<char> buffer((istreambuf_iterator<char>(input)), istreambuf_iterator<char>());
+    vector<char> buffer((istreambuf_iterator<char>(input)), istreambuf_iterator<char>()); // putting all into the buffer
     buffer.push_back('\0');
 
     // Parse the buffer
@@ -284,7 +327,7 @@ int main()
         bool is_nm = false;
         string pl_name;
 
-        for (xml_node<> *parse_tag = parse_node->first_node("tag"); parse_tag; parse_tag = parse_tag->next_sibling())
+        for (xml_node<> *parse_tag = parse_node->first_node("tag"); parse_tag; parse_tag = parse_tag->next_sibling()) // parsing for the name of the node if present
         {
             if (ctos(parse_tag->first_attribute("k")->value()) == "name")
             {
@@ -312,7 +355,7 @@ int main()
         way temp_way;
         temp_way = way(stoll(parse_way->first_attribute("id")->value()), stoll(parse_way->first_attribute("uid")->value()), ctos(parse_way->first_attribute("user")->value()));
         
-        // storing the nodes in the way in the respective object
+        // parsing and storing the nodes in the way in the respective object
         for (xml_node<> *parse_nd = parse_way->first_node("nd"); parse_nd != parse_way->first_node("tag"); parse_nd = parse_nd->next_sibling())
         {
             temp_way.nodes_in_way.push_back(list_nodes.at(stoll(parse_nd->first_attribute("ref")->value())));
@@ -325,7 +368,6 @@ int main()
     node temp_node;
 
     graph g = g.form_graph(list_ways);
-    // g.print_graph();
 
     int choice;
     while (true)
@@ -335,6 +377,7 @@ int main()
         cout << "Enter 3 to see the the length of the shortest path between 2 particular nodes.\n";
         cout << "Enter 0 to exit the loop.\n";
         cin >> choice;
+        getchar(); // reading the "\n" character
         if (choice == 0)
         {
             break;
@@ -346,7 +389,7 @@ int main()
         {
             string plc_name;
             cout << "\nEnter full name or substring of name of place to find the id of that place: ";
-            cin >> plc_name;
+            getline(cin, plc_name);
             
             bool is_present = false;
             for (auto itr : list_nd_with_name) // checking the list with nodes if the name matches with any
@@ -376,7 +419,7 @@ int main()
             
             node temp_nd;
             bool is_prsnt = false;
-            for(auto itr : list_nodes)
+            for(auto itr : list_nodes) // checking if the node with enetred id is present and if present, assigning the node to a temporary node for furthur use
             {
                 if (itr.first == id)
                 {
@@ -398,11 +441,14 @@ int main()
             {
                 cout << dist_arr[i].first << " " << dist_arr[i].second << "\n";
             }
+
+            // removing allocated memory
+            dist_arr.clear();
         }
             break;
         case 3:
         {
-            cout << "\nDo you know the id of the start and destination?\nEnter 0 if you don't know and then enter 2 and type the name to find id's, and 1 if you know\n";
+            cout << "\nDo you know the id of the start and destination?\nEnter:\n0 if you don't know and then enter 1 and type the name to find id's, and\n1 if you know\n";
             int ch;
             cin >> ch;
             if (!ch)
@@ -410,17 +456,18 @@ int main()
                 continue;
             }
             
-            cout << "\nEnter the id of the start and destination: ";
+            cout << "\nEnter the id of the start: ";
             ll id1, id2;
-            cin >> id1 >> id2;
+            cin >> id1;
+            cout << "\nEnter the id of the destination: ";
+            cin >> id2;
             bool is_id1_p = false, is_id2_p = false;
 
-            for (auto itr : list_nodes)
+            for (auto itr : list_nodes) // cjecking if the nodes with the entered id's are actually present
             {
                 if (itr.first == id1)
                 {
                     is_id1_p = true;
-                    continue;
                 }
                 if (itr.first == id2)
                 {
@@ -438,13 +485,16 @@ int main()
                 continue;
             }
             
-            node src = list_nodes.at(id1);
-            node dstn = list_nodes.at(id2);
-        }
-            break;
-        case 4:
-        {
-            g.print_graph();
+            long double lst_dist = g.traverse_graph(g, list_nodes, id1, id2);
+            ll temp = (ll)lst_dist;
+
+            if (temp == INT_MAX)
+            {
+                cout << "There is no possible way between these nodes!!\n";
+                continue;
+            }
+            
+            cout << "The least possible distance is: " << lst_dist << " Km\n";
         }
             break;
         default:
@@ -453,7 +503,13 @@ int main()
         }
     }
     
-    cout << "\n*** You have done ***\n\n";
+    // clearing memory allocated
+    list_nd_with_name.clear();
+    list_nodes.clear();
+    g.list_edge.clear();
+    list_ways.clear();
+
+    cout << "\n\t\t\t******* You have done *******\n\n";
 
     return 0;
 }
