@@ -263,6 +263,7 @@ class graph
             pair<long double, ll> temp = pr_que.top();
             temp.first *= -1;
             pr_que.pop();
+            // cout << temp.second << "\n"; // if you want to see the intemediate nodes but beware it is a long list mostly
             if (dst_id == temp.second)
             {
                 if (dist > temp.first)
@@ -494,7 +495,7 @@ int main()
                 continue;
             }
             
-            cout << "The least possible distance is: " << lst_dist << " Km\n";
+            cout << "\nThe least possible distance is: " << lst_dist << " Km\n";
         }
             break;
         default:
