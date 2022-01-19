@@ -158,7 +158,7 @@ class way
 {
     public:
     ll id, uid;
-    string usr_nm;
+    string usr_nm, name;
     vector<node> nodes_in_way;
 
     way()
@@ -166,12 +166,21 @@ class way
         this->id = 0;
         this->uid = 0;
         this->usr_nm = "name";
+        this->name = "name";
     }
-    way(ll id, ll uid, string name)
+    way(ll id, ll uid, string usr_name)
     {
         this->id = id;
         this->uid = uid;
-        this->usr_nm = name;
+        this->usr_nm = usr_name;
+        this->name = "name";
+    }
+    way(ll id, ll uid, string usr_name, string name)
+    {
+        this->id = id;
+        this->uid = uid;
+        this->usr_nm = usr_name;
+        this->name = name;
     }
 };
 
@@ -313,6 +322,7 @@ int main()
     map<ll, node> list_nodes;
     vector<node> list_nd_with_name;
     vector<way> list_ways;
+    vector<way> list_ways_with_name;
 
     // Iterate over the nodes
     xml_node<> *way_strt = root_node->first_node("way"); // to start way and stop node
@@ -348,7 +358,7 @@ int main()
         
         list_nodes.insert(pair<ll, node>(temp_nd.id, temp_nd));
     }
-
+    
     cout << "Number of nodes present in the map are: " << count_node << "\n";
     // Iterate over the way
     for (xml_node<> *parse_way = way_strt; parse_way != way_end; parse_way = parse_way->next_sibling())
@@ -363,6 +373,15 @@ int main()
             temp_way.nodes_in_way.push_back(list_nodes.at(stoll(parse_nd->first_attribute("ref")->value())));
         }
         list_ways.push_back(temp_way);
+
+        for(xml_node<> *parse_way_name = parse_way->first_node("tag"); parse_way_name; parse_way_name = parse_way_name->next_sibling())
+        {
+            if (ctos(parse_way_name->first_attribute("k")->value()) == "name")
+            {
+                temp_way.name = ctos(parse_way_name->first_attribute("v")->value());
+                list_ways_with_name.push_back(temp_way);
+            }
+        }
     }
     
     cout << "Number of ways present in the map are: " << count_ways << "\n";
@@ -402,10 +421,19 @@ int main()
                     is_present = true;
                 }
             }
+            cout << "\n";
+            for (auto itr : list_ways_with_name)
+            {
+                if (is_substring(plc_name, itr.name))
+                {
+                    cout << "The id of the way with name " << itr.name << " is: " << itr.id << "\n";
+                    is_present = true;
+                }
+            }
             
             if (!is_present)
             {
-                cout << "There is no node with the entered name as substring!!\n";
+                cout << "There is no node or way with the entered name as substring!!\n";
             }
         }
             break;
