@@ -4,6 +4,7 @@
 /*
     1. The user searches for the name of a places instead of user-name in the first case.
     2. Every map will start with root tag "osm" and their attributes will be same as given sample map.
+    3. The user searches only for the name of nodes in the first case not for the names of ways.
 */
 
 #include <bits/stdc++.h>
@@ -263,7 +264,7 @@ class graph
             pair<long double, ll> temp = pr_que.top();
             temp.first *= -1;
             pr_que.pop();
-            // cout << temp.second << "\n"; // if you want to see the intemediate nodes but beware it is a long list mostly
+            
             if (dst_id == temp.second)
             {
                 if (dist > temp.first)
@@ -399,7 +400,6 @@ int main()
                 {
                     cout << "The id of the place with the name " << itr.plc_nm << " is: " << itr.id << "\nlatitude: " << itr.lat << "\nlongitude: " << itr.lon << "\n";
                     is_present = true;
-                    break;
                 }
             }
             
