@@ -537,6 +537,7 @@ int main()
     list_nodes.clear();
     g.list_edge.clear();
     list_ways.clear();
+    list_ways_with_name.clear();
 
     cout << "\n\t\t\t******* You have done *******\n\n";
 
